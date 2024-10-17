@@ -44,9 +44,18 @@ distance [] _ _ = Nothing
 distance ((c1, c2, d):xs) city1 city2
     | (city1 == c1 && city2 == c2) || (city1 == c2 && city2 == c1) = Just d
     | otherwise = distance xs city1 city2
+-- ------------------------------------------------------------------------------------------------------
+
+-- Função 4 | Returns the cities adjacent to a particular city and the respective distances to them.
+
+-- O(n)
 
 adjacent :: RoadMap -> City -> [(City,Distance)]
-adjacent = undefined
+adjacent [] _ = []
+adjacent ((c1, c2, d):xs) city
+    | c1 == city = (c2, d) : adjacent xs city
+    | c2 == city = (c1, d) : adjacent xs city
+    | otherwise = adjacent xs city
 
 pathDistance :: RoadMap -> Path -> Maybe Distance
 pathDistance = undefined
