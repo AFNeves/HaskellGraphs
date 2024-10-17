@@ -33,8 +33,17 @@ areAdjacent ((c1, c2, _):xs) city1 city2
     | (city1 == c1 && city2 == c2) || (city1 == c2 && city2 == c1) = True
     | otherwise = areAdjacent xs city1 city2
 
+-- ------------------------------------------------------------------------------------------------------
+
+-- Função 3 | Returns a Just value with the distance between two cities connected directly, given two city names, and Nothing otherwise.
+
+-- O(n)
+
 distance :: RoadMap -> City -> City -> Maybe Distance
-distance = undefined
+distance [] _ _ = Nothing
+distance ((c1, c2, d):xs) city1 city2
+    | (city1 == c1 && city2 == c2) || (city1 == c2 && city2 == c1) = Just d
+    | otherwise = distance xs city1 city2
 
 adjacent :: RoadMap -> City -> [(City,Distance)]
 adjacent = undefined
