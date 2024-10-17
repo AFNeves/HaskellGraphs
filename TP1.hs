@@ -21,8 +21,17 @@ type RoadMap = [(City,City,Distance)]
 cities :: RoadMap -> [City]
 cities roadmap = map (\(x:_) -> x) . Data.List.group . Data.List.sort $ [cities | (city1, city2, _) <- roadmap, cities <- [city1, city2]]
 
+-- ------------------------------------------------------------------------------------------------------
+
+-- Função 2 | Returns a boolean indicating whether two cities are linked directly.
+
+-- O(n)
+
 areAdjacent :: RoadMap -> City -> City -> Bool
-areAdjacent = undefined
+areAdjacent [] _ _ = False
+areAdjacent ((c1, c2, _):xs) city1 city2
+    | (city1 == c1 && city2 == c2) || (city1 == c2 && city2 == c1) = True
+    | otherwise = areAdjacent xs city1 city2
 
 distance :: RoadMap -> City -> City -> Maybe Distance
 distance = undefined
