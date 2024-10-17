@@ -1,4 +1,4 @@
---import qualified Data.List
+import qualified Data.List
 --import qualified Data.Array
 --import qualified Data.Bits
 
@@ -12,8 +12,14 @@ type Distance = Int
 
 type RoadMap = [(City,City,Distance)]
 
+-- ------------------------------------------------------------------------------------------------------
+
+-- Função 1 | Returns all the cities in the graph.
+
+-- O(n log n) | https://stackoverflow.com/questions/16108714/removing-duplicates-from-a-list-in-haskell-without-elem
+
 cities :: RoadMap -> [City]
-cities = undefined -- modifiy this line to implement the solution, for each exercise not solved, leave the function definition like this
+cities roadmap = map (\(x:_) -> x) . Data.List.group . Data.List.sort $ [cities | (city1, city2, _) <- roadmap, cities <- [city1, city2]]
 
 areAdjacent :: RoadMap -> City -> City -> Bool
 areAdjacent = undefined
