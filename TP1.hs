@@ -44,6 +44,7 @@ distance [] _ _ = Nothing
 distance ((c1, c2, d):xs) city1 city2
     | (city1 == c1 && city2 == c2) || (city1 == c2 && city2 == c1) = Just d
     | otherwise = distance xs city1 city2
+
 -- ------------------------------------------------------------------------------------------------------
 
 -- Função 4 | Returns the cities adjacent to a particular city and the respective distances to them.
@@ -57,8 +58,20 @@ adjacent ((c1, c2, d):xs) city
     | c2 == city = (c1, d) : adjacent xs city
     | otherwise = adjacent xs city
 
+-- ------------------------------------------------------------------------------------------------------
+
+-- Função 5 | Returns the sum of all individual distances in a path between two cities in a Just value, if all the consecutive pairs of cities are directly connected by roads. Otherwise, it returns a Nothing.
+
+-- O(n * m) | n = length of the path, m = length of the roadmap
+
 pathDistance :: RoadMap -> Path -> Maybe Distance
-pathDistance = undefined
+pathDistance _ [] = Just 0
+pathDistance _ [_] = Just 0
+pathDistance roadmap (x1:x2:xs) = case distance roadmap x1 x2 of
+    Just d -> fmap (d +) (pathDistance roadmap (x2:xs))
+    Nothing -> Nothing
+
+-- ------------------------------------------------------------------------------------------------------
 
 rome :: RoadMap -> [City]
 rome = undefined
