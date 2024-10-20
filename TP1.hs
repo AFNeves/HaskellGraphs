@@ -73,8 +73,20 @@ pathDistance roadmap (x1:x2:xs) = case distance roadmap x1 x2 of
 
 -- ------------------------------------------------------------------------------------------------------
 
+-- Função 6 | Returns the names of the cities with the highest number of roads connecting to them.
+
+-- O(n * m) | n = length of the roadmap, m = length of the cities
+
+cityConnectionCounter :: RoadMap -> [(City, Int)]
+cityConnectionCounter roadmap = map (\city -> (city, length (filter (\(c1,c2,_) -> c1 == city || c2 == city) roadmap))) (cities roadmap)
+
 rome :: RoadMap -> [City]
-rome = undefined
+rome roadmap = map fst (filter (\(_, counter) -> counter == maxCount) (cityConnCount))
+    where
+        cityConnCount = cityConnectionCounter roadmap
+        maxCount = maximum (map snd cityConnCount)
+
+-- ------------------------------------------------------------------------------------------------------
 
 isStronglyConnected :: RoadMap -> Bool
 isStronglyConnected = undefined
