@@ -88,8 +88,17 @@ rome roadmap = map fst (filter (\(_, counter) -> counter == maxCount) (cityConnC
 
 -- ------------------------------------------------------------------------------------------------------
 
+-- Função 7 | Returns a boolean indicating whether all the cities in the graph are connected in the roadmap.
+
+dfs :: RoadMap -> City -> [City] -> [City]
+dfs roadmap city visited
+    | city `elem` visited = visited
+    | otherwise = foldl (\acc c -> dfs roadmap c acc) (city:visited) [c | (c, _) <- adjacent roadmap city]
+
 isStronglyConnected :: RoadMap -> Bool
-isStronglyConnected = undefined
+isStronglyConnected roadmap = length (cities roadmap) == length (dfs roadmap "0" [])
+
+-- ------------------------------------------------------------------------------------------------------
 
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath = undefined
