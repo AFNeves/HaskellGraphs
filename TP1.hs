@@ -1,4 +1,6 @@
 import qualified Data.List
+import qualified Data.Ord as Ord
+import Data.Maybe
 --import qualified Data.Array
 --import qualified Data.Bits
 
@@ -100,8 +102,39 @@ isStronglyConnected roadmap = length (cities roadmap) == length (dfs roadmap "0"
 
 -- ------------------------------------------------------------------------------------------------------
 
+-- Função 8 | Returns the shortest path between two cities in the graph.
+
+dijkstra :: RoadMap -> [(Distance, City)] -> [(City, Distance)] -> [(City, [City])] -> ([(City, Distance)], [(City, [City])])
+dijkstra _ [] distMap prevMap = (distMap, prevMap)
+dijkstra roadmap ((dist, city):queue) distMap prevMap = dijkstra roadmap newQueue newDistMap newPrevMap
+    where
+        currentDist = fromMaybe maxBound (lookup city distMap)
+        neighbors = adjacent roadmap city
+        (newDistMap, newPrevMap, newQueue) = Data.List.foldl' update (distMap, prevMap, queue) neighbors
+
+        update (distMap, prevMap, queue) (neighbor, weight)
+            | newDist < fromMaybe maxBound (lookup neighbor distMap) = (newDistMap, newPrevMap, newQueue)
+            | newDist == fromMaybe maxBound (lookup neighbor distMap) = (distMap, newPrevMapEqual, queue)
+            | otherwise = (distMap, prevMap, queue)
+                where
+                    newDist = currentDist + weight
+                    newDistMap = (neighbor, newDist) : filter ((/= neighbor) . fst) distMap
+                    newPrevMap = (neighbor, [city]) : filter ((/= neighbor) . fst) prevMap
+                    newPrevMapEqual = (neighbor, city : fromMaybe [] (lookup neighbor prevMap)) : filter ((/= neighbor) . fst) prevMap
+                    newQueue = Data.List.insertBy (Ord.comparing fst) (newDist, neighbor) queue
+
 shortestPath :: RoadMap -> City -> City -> [Path]
-shortestPath = undefined
+shortestPath roadmap start end = map reverse $ buildPaths end prevMap
+    where
+        initialQueue = [(0, start)]
+        initialDistMap = [(start, 0)]
+        initialPrevMap = [(start, [])]
+
+        (distMap, prevMap) = dijkstra roadmap initialQueue initialDistMap initialPrevMap
+
+        buildPaths city prevMap
+            | city == start = [[start]]
+            | otherwise = [city:path | prev <- fromMaybe [] (lookup city prevMap), path <- buildPaths prev prevMap]
 
 travelSales :: RoadMap -> Path
 travelSales = undefined
@@ -118,3 +151,6 @@ gTest2 = [("0","1",10),("0","2",15),("0","3",20),("1","2",35),("1","3",25),("2",
 
 gTest3 :: RoadMap -- unconnected graph
 gTest3 = [("0","1",4),("2","3",2)]
+
+gTest4 :: RoadMap
+gTest4 = [("0","1",4),("1","2",2),("2","3",1),("1","3",3),("0","2",6)]
