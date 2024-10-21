@@ -1,6 +1,5 @@
 import qualified Data.List
 import qualified Data.Ord as Ord
-import Data.Maybe
 --import qualified Data.Array
 --import qualified Data.Bits
 
@@ -104,23 +103,34 @@ isStronglyConnected roadmap = length (cities roadmap) == length (dfs roadmap "0"
 
 -- Função 8 | Returns the shortest path between two cities in the graph.
 
+searchPrevMap :: City -> [(City, [City])] -> [City]
+searchPrevMap city prevMap = case lookup city prevMap of
+    Just prevCities -> prevCities
+    Nothing -> []
+
+searchDistMap :: City -> [(City, Distance)] -> Distance
+searchDistMap city distMap = case lookup city distMap of
+    Just currentDist -> currentDist
+    Nothing -> maxBound
+
 dijkstra :: RoadMap -> [(Distance, City)] -> [(City, Distance)] -> [(City, [City])] -> ([(City, Distance)], [(City, [City])])
 dijkstra _ [] distMap prevMap = (distMap, prevMap)
 dijkstra roadmap ((dist, city):queue) distMap prevMap = dijkstra roadmap newQueue newDistMap newPrevMap
     where
-        currentDist = fromMaybe maxBound (lookup city distMap)
+        currentDist = searchDistMap city distMap
         neighbors = adjacent roadmap city
         (newDistMap, newPrevMap, newQueue) = Data.List.foldl' update (distMap, prevMap, queue) neighbors
 
         update (distMap, prevMap, queue) (neighbor, weight)
-            | newDist < fromMaybe maxBound (lookup neighbor distMap) = (newDistMap, newPrevMap, newQueue)
-            | newDist == fromMaybe maxBound (lookup neighbor distMap) = (distMap, newPrevMapEqual, queue)
+            | newDist < prevNeighborDist = (newDistMap, newPrevMap, newQueue)
+            | newDist == prevNeighborDist = (distMap, newPrevMapEqual, queue)
             | otherwise = (distMap, prevMap, queue)
                 where
+                    prevNeighborDist = searchDistMap neighbor distMap
                     newDist = currentDist + weight
                     newDistMap = (neighbor, newDist) : filter ((/= neighbor) . fst) distMap
                     newPrevMap = (neighbor, [city]) : filter ((/= neighbor) . fst) prevMap
-                    newPrevMapEqual = (neighbor, city : fromMaybe [] (lookup neighbor prevMap)) : filter ((/= neighbor) . fst) prevMap
+                    newPrevMapEqual = (neighbor, city : searchPrevMap neighbor prevMap) : filter ((/= neighbor) . fst) prevMap
                     newQueue = Data.List.insertBy (Ord.comparing fst) (newDist, neighbor) queue
 
 shortestPath :: RoadMap -> City -> City -> [Path]
@@ -134,7 +144,9 @@ shortestPath roadmap start end = map reverse $ buildPaths end prevMap
 
         buildPaths city prevMap
             | city == start = [[start]]
-            | otherwise = [city:path | prev <- fromMaybe [] (lookup city prevMap), path <- buildPaths prev prevMap]
+            | otherwise = [city:path | prev <- searchPrevMap city prevMap, path <- buildPaths prev prevMap]
+
+-- ------------------------------------------------------------------------------------------------------
 
 travelSales :: RoadMap -> Path
 travelSales = undefined
