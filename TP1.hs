@@ -1,5 +1,4 @@
 import qualified Data.List
-import qualified Data.Ord as Ord
 --import qualified Data.Array
 --import qualified Data.Bits
 
@@ -131,7 +130,7 @@ dijkstra roadmap ((dist, city):queue) distMap prevMap = dijkstra roadmap newQueu
                     newDistMap = (neighbor, newDist) : filter ((/= neighbor) . fst) distMap
                     newPrevMap = (neighbor, [city]) : filter ((/= neighbor) . fst) prevMap
                     newPrevMapEqual = (neighbor, city : searchPrevMap neighbor prevMap) : filter ((/= neighbor) . fst) prevMap
-                    newQueue = Data.List.insertBy (Ord.comparing fst) (newDist, neighbor) queue
+                    newQueue = Data.List.insertBy (\(d1, _) (d2, _) -> compare d1 d2) (newDist, neighbor) queue
 
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath roadmap start end = map reverse $ buildPaths end prevMap
