@@ -132,18 +132,18 @@ dijkstra roadmap ((dist, city):queue) distMap prevMap = dijkstra roadmap newQueu
                     newPrevMapEqual = (neighbor, city : searchPrevMap neighbor prevMap) : filter ((/= neighbor) . fst) prevMap
                     newQueue = Data.List.insertBy (\(d1, _) (d2, _) -> compare d1 d2) (newDist, neighbor) queue
 
+buildPaths :: City -> City -> [(City, [City])] -> [[City]]
+buildPaths start city prevMap
+    | city == start = [[start]]
+    | otherwise = [city:path | prev <- searchPrevMap city prevMap, path <- buildPaths start prev prevMap]
+
 shortestPath :: RoadMap -> City -> City -> [Path]
-shortestPath roadmap start end = map reverse $ buildPaths end prevMap
+shortestPath roadmap start end = map reverse $ buildPaths start end foundPaths
     where
         initialQueue = [(0, start)]
         initialDistMap = [(start, 0)]
         initialPrevMap = [(start, [])]
-
-        prevMap = dijkstra roadmap initialQueue initialDistMap initialPrevMap
-
-        buildPaths city prevMap
-            | city == start = [[start]]
-            | otherwise = [city:path | prev <- searchPrevMap city prevMap, path <- buildPaths prev prevMap]
+        foundPaths = dijkstra roadmap initialQueue initialDistMap initialPrevMap
 
 -- ------------------------------------------------------------------------------------------------------
 
