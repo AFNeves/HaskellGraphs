@@ -114,23 +114,24 @@ searchDistMap city distMap = case lookup city distMap of
 
 dijkstra :: RoadMap -> [(Distance, City)] -> [(City, Distance)] -> [(City, [City])] -> ([(City, [City])])
 dijkstra _ [] _ prevMap = prevMap
-dijkstra roadmap ((dist, city):queue) distMap prevMap = dijkstra roadmap newQueue newDistMap newPrevMap
+dijkstra roadmap ((dist, city):queue) distMap prevMap = dijkstra roadmap newQueue' newDistMap' newPrevMap'
     where
-        currentDist = searchDistMap city distMap
         neighbors = adjacent roadmap city
-        (newDistMap, newPrevMap, newQueue) = Data.List.foldl' update (distMap, prevMap, queue) neighbors
+        currentDist = searchDistMap city distMap
+        (newQueue', newDistMap', newPrevMap') = updateNeighbors neighbors queue distMap prevMap
 
-        update (distMap, prevMap, queue) (neighbor, weight)
-            | newDist < prevNeighborDist = (newDistMap, newPrevMap, newQueue)
-            | newDist == prevNeighborDist = (distMap, newPrevMapEqual, queue)
-            | otherwise = (distMap, prevMap, queue)
+        updateNeighbors [] queue distMap prevMap = (queue, distMap, prevMap)
+        updateNeighbors ((neighbor, weight):ns) queue distMap prevMap
+            | newDist < prevNeighborDist = updateNeighbors ns newQueue newDistMap newPrevMap
+            | newDist == prevNeighborDist = updateNeighbors ns queue distMap newPrevMapEqual
+            | otherwise = updateNeighbors ns queue distMap prevMap
                 where
-                    prevNeighborDist = searchDistMap neighbor distMap
                     newDist = currentDist + weight
+                    prevNeighborDist = searchDistMap neighbor distMap
+                    newQueue = Data.List.insertBy (\(d1, _) (d2, _) -> compare d1 d2) (newDist, neighbor) queue
                     newDistMap = (neighbor, newDist) : filter ((/= neighbor) . fst) distMap
                     newPrevMap = (neighbor, [city]) : filter ((/= neighbor) . fst) prevMap
                     newPrevMapEqual = (neighbor, city : searchPrevMap neighbor prevMap) : filter ((/= neighbor) . fst) prevMap
-                    newQueue = Data.List.insertBy (\(d1, _) (d2, _) -> compare d1 d2) (newDist, neighbor) queue
 
 buildPaths :: City -> City -> [(City, [City])] -> [[City]]
 buildPaths start city prevMap
