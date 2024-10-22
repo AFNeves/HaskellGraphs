@@ -1,5 +1,5 @@
 import qualified Data.List
---import qualified Data.Array
+import qualified Data.Array
 --import qualified Data.Bits
 
 -- PFL 2024/2025 Practical assignment 1
@@ -11,6 +11,23 @@ type Path = [City]
 type Distance = Int
 
 type RoadMap = [(City,City,Distance)]
+
+-- ------------------------------------------------------------------------------------------------------
+
+-- Graph Representation Conversions
+
+type AdjList = [(City,[(City,Distance)])]
+
+type AdjMatrix = Data.Array.Array (Int,Int) (Maybe Distance)
+
+toAdjList :: RoadMap -> AdjList
+toAdjList roadmap = [(city, adjacent roadmap city) | city <- cities roadmap]
+
+toAdjMatrix :: RoadMap -> AdjMatrix
+toAdjMatrix roadmap = emptyMatrix Data.Array.// [((read city1 :: Int, read city2 :: Int), Just d) | (city1, city2, d) <- roadmap]
+    where
+        n = length (cities roadmap)
+        emptyMatrix = Data.Array.array ((0,0), (n - 1,n - 1)) [((i, j), Nothing) | i <- [0..n-1], j <- [0..n-1]]
 
 -- ------------------------------------------------------------------------------------------------------
 
@@ -150,6 +167,8 @@ shortestPath roadmap start end = map reverse $ buildPaths start end foundPaths
 
 travelSales :: RoadMap -> Path
 travelSales = undefined
+
+-- ------------------------------------------------------------------------------------------------------
 
 tspBruteForce :: RoadMap -> Path
 tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
