@@ -129,11 +129,13 @@ searchDistMap city distMap = case lookup city distMap of
     Just currentDist -> currentDist
     Nothing -> maxBound
 
-dijkstra :: RoadMap -> [(Distance, City)] -> [(City, Distance)] -> [(City, [City])] -> ([(City, [City])])
+dijkstra :: AdjList -> [(Distance, City)] -> [(City, Distance)] -> [(City, [City])] -> ([(City, [City])])
 dijkstra _ [] _ prevMap = prevMap
-dijkstra roadmap ((dist, city):queue) distMap prevMap = dijkstra roadmap newQueue' newDistMap' newPrevMap'
+dijkstra adjList ((dist, city):queue) distMap prevMap = dijkstra adjList newQueue' newDistMap' newPrevMap'
     where
-        neighbors = adjacent roadmap city
+        neighbors = case lookup city adjList of
+            Just list -> list
+            Nothing -> []
         currentDist = searchDistMap city distMap
         (newQueue', newDistMap', newPrevMap') = updateNeighbors neighbors queue distMap prevMap
 
@@ -161,7 +163,7 @@ shortestPath roadmap start end = map reverse $ buildPaths start end foundPaths
         initialQueue = [(0, start)]
         initialDistMap = [(start, 0)]
         initialPrevMap = [(start, [])]
-        foundPaths = dijkstra roadmap initialQueue initialDistMap initialPrevMap
+        foundPaths = dijkstra (toAdjList roadmap) initialQueue initialDistMap initialPrevMap
 
 -- ------------------------------------------------------------------------------------------------------
 
