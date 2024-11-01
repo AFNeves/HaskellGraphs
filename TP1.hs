@@ -1,6 +1,6 @@
 import qualified Data.List
 import qualified Data.Array
---import qualified Data.Bits
+import qualified Data.Bits
 
 -- PFL 2024/2025 Practical assignment 1
 
@@ -19,6 +19,8 @@ type RoadMap = [(City,City,Distance)]
 type AdjList = [(City,[(City,Distance)])]
 
 type AdjMatrix = Data.Array.Array (Int,Int) (Maybe Distance)
+
+type MemoTable = Data.Array.Array (Int,Int) (Maybe Distance)
 
 toAdjList :: RoadMap -> AdjList
 toAdjList roadmap = [(city, adjacent roadmap city) | city <- cities roadmap]
@@ -167,13 +169,93 @@ shortestPath roadmap start end = map reverse $ buildPaths start end foundPaths
 
 -- ------------------------------------------------------------------------------------------------------
 
+-- Função 9 | Returns a solution to the Traveling Salesman Problem (TSP) using Dynamic Programming.
+
+--------------------------------------------------
+-- AUXILIARY FUNCTIONS
+--------------------------------------------------
+
+notIn :: Int -> Int -> Bool
+notIn i subset = (1 `Data.Bits.shiftL` i) Data.Bits..&. subset == 0
+
+combinations :: Int -> Int -> [Int]
+combinations 0 _ = [0]
+combinations i n
+    | i > n = []
+    | otherwise = combinations i (n - 1) ++ [x Data.Bits..|. (1 `Data.Bits.shiftL` (n - 1)) | x <- combinations (i - 1) (n - 1)]
+
+customMatrixLookup :: Data.Array.Array (Int, Int) (Maybe Distance) -> Int -> Int -> Distance
+customMatrixLookup matrix i j = case matrix Data.Array.! (i, j) of
+    Just d -> d
+    Nothing -> maxBound
+
+--------------------------------------------------
+-- INITIALIZATION
+--------------------------------------------------
+
+createMemoTable :: Int -> MemoTable
+createMemoTable n = Data.Array.array ((0,0), (n - 1, 2^n - 1)) [((i, j), Nothing) | i <- [0..n - 1], j <- [0..2^n - 1]]
+
+initializeMemoTable :: AdjMatrix -> Int -> Int -> MemoTable
+initializeMemoTable matrix start n = createMemoTable n Data.Array.//
+    [((i, 1 `Data.Bits.shiftL` start Data.Bits..|. 1 `Data.Bits.shiftL` i), matrix Data.Array.! (start, i)) | i <- [0..n - 1], i /= start]
+
+--------------------------------------------------
+-- RECOVER PATH
+--------------------------------------------------
+
+arrayToPath :: Data.Array.Array Int Int -> Path
+arrayToPath array = [show i | i <- Data.Array.elems array]
+
+recoverPath :: AdjMatrix -> MemoTable -> Int -> Int -> Path
+recoverPath matrix memo start n = arrayToPath (initialPathArray Data.Array.// recoveredPathIndices)
+    where
+        lastIndex = start
+        initialState = (1 `Data.Bits.shiftL` n) - 1
+        initialPathArray = Data.Array.array (0, n) [(i, -1) | i <- [0..n]] Data.Array.// [(0, start), (n, start)]
+
+        recoveredPathIndices = recoverPathAux (n - 1) lastIndex initialState []
+
+        recoverPathAux :: Int -> Int -> Int -> [(Int, Int)] -> [(Int, Int)]
+        recoverPathAux i lastIndex state acc
+            | i < 1 = acc
+            | otherwise = recoverPathAux (i - 1) newIndex newState ((i, newIndex) : acc)
+            where
+                newIndex = findNextCity (-1) [0..n - 1] lastIndex state
+                newState = state `Data.Bits.xor` (1 `Data.Bits.shiftL` newIndex)
+
+                findNextCity :: Int -> [Int] -> Int -> Int -> Int
+                findNextCity best [] _ _ = best
+                findNextCity best (j:js) index state
+                    | j == start || notIn j state = findNextCity best js lastIndex state
+                    | otherwise =
+                        let prevDist = customMatrixLookup memo best state + customMatrixLookup matrix best lastIndex
+                            newDist = customMatrixLookup memo j state + customMatrixLookup matrix j lastIndex
+                        in if best == -1 || newDist < prevDist
+                            then findNextCity j js lastIndex state
+                            else findNextCity best js lastIndex state
+
+--------------------------------------------------
+-- TSP SOLVE LOOP
+--------------------------------------------------
+
+
+
+
+
+--------------------------------------------------
+-- MAIN FUNCTION
+--------------------------------------------------
+
 travelSales :: RoadMap -> Path
-travelSales = undefined
+travelSales roadmap = recoverPath matrix memo start n
+    where
+        start = 0 -- ALTER THIS LINE TO CHANGE THE STARTING CITY
+        n = length (cities roadmap)
+        matrix = toAdjMatrix roadmap
+        memo = initializeMemoTable matrix start n
 
 -- ------------------------------------------------------------------------------------------------------
-
-tspBruteForce :: RoadMap -> Path
-tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
 
 -- Some graphs to test your work
 gTest1 :: RoadMap
