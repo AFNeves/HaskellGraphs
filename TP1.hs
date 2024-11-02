@@ -2,6 +2,8 @@ import qualified Data.List
 import qualified Data.Array
 import qualified Data.Bits
 
+-- PFL 2024/2025 Practical Assignment 1
+
 type City = String
 type Path = [City]
 type Distance = Int
