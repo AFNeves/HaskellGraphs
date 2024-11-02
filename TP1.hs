@@ -26,10 +26,12 @@ toAdjList :: RoadMap -> AdjList
 toAdjList roadmap = [(city, adjacent roadmap city) | city <- cities roadmap]
 
 toAdjMatrix :: RoadMap -> AdjMatrix
-toAdjMatrix roadmap = emptyMatrix Data.Array.// [((read city1 :: Int, read city2 :: Int), Just d) | (city1, city2, d) <- roadmap]
+toAdjMatrix roadmap = emptyMatrix Data.Array.// connections Data.Array.// reversedConnections
     where
         n = length (cities roadmap)
         emptyMatrix = Data.Array.array ((0,0), (n - 1,n - 1)) [((i, j), Nothing) | i <- [0..n-1], j <- [0..n-1]]
+        connections = [((read city1 :: Int, read city2 :: Int), Just d) | (city1, city2, d) <- roadmap]
+        reversedConnections = [((read city2 :: Int, read city1 :: Int), Just d) | (city1, city2, d) <- roadmap]
 
 -- ------------------------------------------------------------------------------------------------------
 
