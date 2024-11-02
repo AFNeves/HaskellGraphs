@@ -239,9 +239,44 @@ recoverPath matrix memo start n = arrayToPath (initialPathArray Data.Array.// re
 -- TSP SOLVE LOOP
 --------------------------------------------------
 
+solveTSP :: AdjMatrix -> MemoTable -> Int -> Int -> Int -> MemoTable
+solveTSP matrix memo start n r
+    | r > n = memo
+    | otherwise = solveTSP matrix updatedMemo start n (r + 1)
+        where
+            updatedMemo = updateMemo memo r n
 
+            updateMemo :: MemoTable -> Int -> Int -> MemoTable
+            updateMemo memo r n = updateMemoAux memo (combinations r n)
+                where
+                    updateMemoAux :: MemoTable -> [Int] -> MemoTable
+                    updateMemoAux memo [] = memo
+                    updateMemoAux memo (subset:subsets)
+                        | notIn start subset = updateMemoAux memo subsets
+                        | otherwise = updateMemoAux (updateSubset memo subset) subsets
 
+            updateSubset :: MemoTable -> Int -> MemoTable
+            updateSubset memo subset = updateSubsetAux memo subset [0..n - 1]
+                where
+                    updateSubsetAux :: MemoTable -> Int -> [Int] -> MemoTable
+                    updateSubsetAux memo _ [] = memo
+                    updateSubsetAux memo subset (next:nexts)
+                        | next == start || notIn next subset = updateSubsetAux memo subset nexts
+                        | otherwise = updateSubsetAux (updateNext memo subset next) subset nexts
 
+            updateNext :: MemoTable -> Int -> Int -> MemoTable
+            updateNext memo subset next = memo Data.Array.// [((next, subset), Just minDist)]
+                where
+                    state = subset `Data.Bits.xor` (1 `Data.Bits.shiftL` next)
+                    minDist = calcMinDist memo state next [0..n-1] maxBound
+
+            calcMinDist :: MemoTable -> Int -> Int -> [Int] -> Distance -> Distance
+            calcMinDist _ _ _ [] minDist = minDist
+            calcMinDist memo state next (e:es) minDist
+                | e == start || e == next || notIn e state = calcMinDist memo state next es minDist
+                | otherwise = calcMinDist memo state next es (min minDist sumDist)
+                    where
+                        sumDist = customMatrixLookup memo e state + customMatrixLookup matrix e next
 
 --------------------------------------------------
 -- MAIN FUNCTION
@@ -253,7 +288,7 @@ travelSales roadmap = recoverPath matrix memo start n
         start = 0 -- ALTER THIS LINE TO CHANGE THE STARTING CITY
         n = length (cities roadmap)
         matrix = toAdjMatrix roadmap
-        memo = initializeMemoTable matrix start n
+        memo = solveTSP matrix (initializeMemoTable matrix start n) start n 3
 
 -- ------------------------------------------------------------------------------------------------------
 
