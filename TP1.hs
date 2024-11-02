@@ -189,7 +189,7 @@ combinations i n
 customMatrixLookup :: Data.Array.Array (Int, Int) (Maybe Distance) -> Int -> Int -> Distance
 customMatrixLookup matrix i j = case matrix Data.Array.! (i, j) of
     Just d -> d
-    Nothing -> maxBound
+    Nothing -> 1000000000000000
 
 --------------------------------------------------
 -- INITIALIZATION
