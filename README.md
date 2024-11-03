@@ -1,4 +1,4 @@
-# PFL Practical Assignment 1
+# HaskellGraphs
 
 This **README** provides a comprehensive guide to the implementation of the two main functions in this project: `shortestPath` and `travelSales`. Each function is discussed in detail, including the algorithms used and auxiliary data structures.
 
