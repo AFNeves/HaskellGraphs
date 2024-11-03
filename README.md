@@ -1,93 +1,187 @@
-# HaskellGraphs
+# PFL Practical Assignment 1
 
+This **README** provides a comprehensive guide to the implementation of the two main functions in this project: `shortestPath` and `travelSales`. Each function is discussed in detail, including the algorithms used and auxiliary data structures.
 
+## Shortest Path Function: `shortestPath`
 
-## Getting started
+The `shortestPath` function calculates the shortest path between two cities in the roadmap, represented as a `RoadMap`. The implementation uses **Dijkstra's** algorithm to efficiently find the shortest path from the starting city to the destination city.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### Data Structures Used
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+In the making of this function, several data structures were used to optimize the computation of the shortest path. These structures are essential for storing intermediate results, managing city distances, and efficiently updating paths during the search.
 
-## Add your files
+**1. *Adjacency List* (`AdjList`)**
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+The ***adjacency list*** is used to represent the graph as a collection of cities, each associated with a list of neighboring cities and the distances to them. This structure was chosen for its efficiency in accessing neighbors and their distances, crucial for **Dijkstra's** algorithm.
 
+- **Implementation**: Represented as a list of tuples `(City, [(City, Distance)])`.
+
+- **Functionality**: Provides efficient access to all cities directly reachable from a given city, facilitating traversal and exploration in algorithms such as Dijkstra and TSP.
+
+- **Creation**: The `toAdjList` function constructs the adjacency list from the roadmap, calling the `adjacent` function to retrieve the neighbors of each city.
+
+    ```haskell
+    toAdjList :: RoadMap -> AdjList
+    toAdjList roadmap = [(city, adjacent roadmap city) | city <- cities roadmap]
+    ```
+
+**2. *Priority Queue* (`PQueue`)**
+
+The ***priority queue*** is a central structure in the Dijkstra algorithm, where it maintains the cities ordered by their current shortest known distances. This allows the algorithm to always expand the city with the shortest path next.
+
+- **Implementation**: Represented as a list of tuples `(Distance,City)`.
+
+- **Functionality**: Cities and their distances are inserted in sorted order, ensuring that retrieval of the shortest path is constant.
+
+**3. *Distance Table* (`DistMap`)**
+
+The ***distance table*** keeps track of the minimum known distance from the starting city to each city in the roadmap. This ensures that each city’s shortest path distance is stored and updated only when a shorter path is found.
+
+- **Implementation**: Represented as a list of tuples `(City,Distance)`.
+
+- **Functionality**: Allows for quick lookup of the shortest known distance to a city, enabling efficient updates during the algorithm.
+
+**4. *Previous City Table* (`PrevMap`)**
+
+The ***previous city table*** records the last city in the path before each city, which is essential for reconstructing the shortest path at the end of the algorithm.
+
+- **Implementation**: Represented as a list of tuples `(City,[City])`.
+
+- **Functionality**: Allows the reconstruction of paths by tracing back from the destination to the start.
+
+### Exception Handling Functions
+
+The `searchPrevMap` and `searchDistMap` functions are utility handlers designed to prevent runtime errors when looking up values in the tables, particularly when a city might be missing from the data. These functions ensure the algorithms can handle missing entries gracefully by returning default values.
+
+```haskell
+searchPrevMap :: City -> PrevMap -> [City]
+searchPrevMap city prevMap = case lookup city prevMap of
+    Just prevCities -> prevCities
+    Nothing -> []
 ```
-cd existing_repo
-git remote add origin https://gitlab.up.pt/up202108884/haskellgraphs.git
-git branch -M main
-git push -uf origin main
+
+- **Purpose**: Finds the previous cities associated with a given City in prevMap.
+
+- **Default Behavior**: Returns an empty list if city is not found, allowing the algorithm to proceed without errors due to missing data.
+
+```haskell
+searchDistMap :: City -> DistMap -> Distance
+searchDistMap city distMap = case lookup city distMap of
+    Just currentDist -> currentDist
+    Nothing -> 1000000000000000
 ```
 
-## Integrate with your tools
+- **Purpose**: Retrieves the distance for a given City from distMap.
 
-- [ ] [Set up project integrations](https://gitlab.up.pt/up202108884/haskellgraphs/-/settings/integrations)
+- **Default Behavior**: Returns a large number (treated as "infinity") if the city is absent, indicating that the city is unreachable in the current path context.
 
-## Collaborate with your team
+### Rebuiding Paths: `buildPaths`
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+The `buildPaths` function is responsible for reconstructing the shortest paths from the destination city back to the starting city. It recursively builds the paths by backtracking from the destination to the start, using the previous city table to determine the next city in the path.
 
-## Test and Deploy
+```haskell
+buildPaths :: City -> City -> PrevMap -> [Path]
+buildPaths start city prevMap
+    | city == start = [[start]]
+    | otherwise = [city:path | prev <- searchPrevMap city prevMap, path <- buildPaths start prev prevMap]
+```
 
-Use the built-in continuous integration in GitLab.
+- **Purpose**: Recursively builds the shortest paths from the destination city back to the starting city.
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+- **Base Case**: If the current city is the starting city, the path is complete, and the function returns a list containing the starting city.
+
+- **Recursive Case**: For each previous city, the function appends the current city to the path and recursively builds the path from the start to the previous city.
+
+### Dijkstra's Algorithm: `dijkstra` and `updateNeighbors`
+
+The `dijkstra` function is the main function in the **Dijkstra's** algorithm implementation. It encapsulates the core logic of the algorithm, which is supported by the updateNeighbors function. The `updateNeighbors` function updates the priority queue, distance map, and previous map for the neighbors of the current city.
+
+#### Dijkstra's Algorithm: `dijkstra`
+
+The `dijkstra` function receives the adjacency list, priority queue, distance map, and previous city table as arguments. It iterates through the priority queue, expanding the city with the shortest known distance and calling `updateNeighbors` to update its neighbors. When the priority queue is empty, it means all cities have been visited, and the algorithm terminates, returning the previous city table.
+
+```haskell
+dijkstra :: AdjList -> PQueue -> DistMap -> PrevMap -> PrevMap
+dijkstra _ [] _ prevMap = prevMap
+dijkstra adjList ((dist, city):queue) distMap prevMap = dijkstra adjList newQueue' newDistMap' newPrevMap'
+    where
+        neighbors = case lookup city adjList of
+            Just list -> list
+            Nothing -> []
+        currentDist = searchDistMap city distMap
+        (newQueue', newDistMap', newPrevMap') = updateNeighbors neighbors queue distMap prevMap
+```
+
+- **Purpose**: Executes Dijkstra's algorithm to find the shortest paths from the starting city to all other cities in the graph.
+
+- **Base Case**: If the priority queue is empty, the function returns the previous city table.
+
+- **Recursive Case**: The function selects the city with the smallest distance from the priority queue, calls the `updateNeighbors` to update the distances to its neighbors, and recursively processes the remaining cities in the queue.
+
+#### Updating Neighbors: `updateNeighbors`
+
+The `updateNeighbors` function receives the neighbors of the current city, the priority queue, distance map, and previous city table. It iterates through the neighbors list and compares the new distance to the neighbor with the previous known distance. If the new distance is shorter, all three tables are updated with corresponding values. If the new distance is equal to the previous distance, the previous city is appended to the list of previous cities for the neighbor. If the new distance is longer, no updates are made, and the loop continues. When the neighbors list is empty, the function returns the updated priority queue, distance map, and previous city table.
+
+```haskell
+updateNeighbors :: [(City, Distance)] -> PQueue -> DistMap -> PrevMap -> (PQueue, DistMap, PrevMap)
+updateNeighbors [] queue distMap prevMap = (queue, distMap, prevMap)
+updateNeighbors ((neighbor, weight):ns) queue distMap prevMap
+    | newDist < prevNeighborDist = updateNeighbors ns newQueue newDistMap newPrevMap
+    | newDist == prevNeighborDist = updateNeighbors ns queue distMap newPrevMapEqual
+    | otherwise = updateNeighbors ns queue distMap prevMap
+        where
+            newDist = currentDist + weight
+            prevNeighborDist = searchDistMap neighbor distMap
+            newQueue = Data.List.insertBy (\(d1, _) (d2, _) -> compare d1 d2) (newDist, neighbor) queue
+            newDistMap = (neighbor, newDist) : filter ((/= neighbor) . fst) distMap
+            newPrevMap = (neighbor, [city]) : filter ((/= neighbor) . fst) prevMap
+            newPrevMapEqual = (neighbor, city : searchPrevMap neighbor prevMap) : filter ((/= neighbor) . fst) prevMap
+```
+
+- **Purpose**: Updates the priority queue, distance map, and previous map for the neighbors of the current city.
+
+- **Base Case**: If there are no more neighbors to process, the function returns the updated priority queue, distance map, and previous map.
+
+- **Recursive Case**: The function updates the distances to each neighbor, maintains the shortest known distances, and recursively processes the remaining neighbors:
+
+    - If the new distance is shorter, the priority queue, distance map, and previous map are updated with the new values.
+
+    - If the new distance is equal to the previous distance, the previous city is appended to the list of previous cities for the neighbor.
+
+    - If the new distance is longer, no updates are made.
+
+### Shortest Path Caller: `shortestPath`
+
+The shortestPath function receives a roadmap, a start city, and an end city as arguments. It initializes the necessary data structures and calls the `dijkstra` function to find the shortest paths from the start city to all other cities. Finally, it calls the `buildPaths` function to reconstruct the shortest path from the start city to the end city.
+
+```haskell
+shortestPath :: RoadMap -> City -> City -> [Path]
+shortestPath roadmap start end = map reverse $ buildPaths start end foundPaths
+    where
+        initialQueue = [(0, start)]
+        initialDistMap = [(start, 0)]
+        initialPrevMap = [(start, [])]
+        foundPaths = dijkstra (toAdjList roadmap) initialQueue initialDistMap initialPrevMap
+```
+
+- **Purpose**: Organize and call the necessary functions to find the shortest path between two cities in the roadmap.
+
+- **Functionality**: Initializes the priority queue, distance map, and previous city table, then calls `dijkstra` to find the shortest paths. Finally, it reconstructs the shortest path from the start city to the end city.
+
+## Traveling Salesman Problem (TSP) Function: `travelSales`
+
+The `travelSales` function solves the Traveling Salesman Problem (TSP) for a given roadmap. This function aims to find the minimum-cost tour that visits every city exactly once and returns to the starting city. It leverages dynamic programming with memoization to optimize the TSP solution.
+
+**Implementation Details**
+
+- **Data Structures**:
+    
+    - **Adjacency Matrix (`AdjMatrix`)**: This matrix, created by `toAdjMatrix`, stores distances between cities, making lookup operations efficient. Each entry `(i, j)` contains the distance from city `i` to city `j`, represented as `Maybe Distance` to allow for non-existent paths.
+    
+    - **Memo Table**: Used to store intermediate results for each city and visited subset of cities, ensuring subproblems are not recomputed. This table is filled by `solveTSP`, and `recoverPath` retrieves the path by backtracking through the memo table.
+
+- **Algorithm**: The function first checks if the roadmap is strongly connected with `isStronglyConnected`, ensuring a tour is possible. If the roadmap meets this condition, it initializes the memo table and adjacency matrix, then invokes `solveTSP` to compute minimum costs recursively. After computing all costs, `recoverPath` reconstructs the optimal tour by tracing through the memo table.
 
 ***
 
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This project was developed by Afonso Neves.
