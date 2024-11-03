@@ -33,8 +33,6 @@ The ***priority queue*** is a central structure in the Dijkstra algorithm, where
 
 - **Functionality**: Cities and their distances are inserted in sorted order, ensuring that retrieval of the shortest path is constant.
 
-<br>
-
 **3. *Distance Table* (*DistMap*)**
 
 The ***distance table*** keeps track of the minimum known distance from the starting city to each city in the roadmap. This ensures that each city’s shortest path distance is stored and updated only when a shorter path is found.
@@ -77,8 +75,6 @@ searchDistMap city distMap = case lookup city distMap of
 
 - **Default Behavior**: Returns a large number (treated as "infinity") if the city is absent, indicating that the city is unreachable in the current path context.
 
-<br><br>
-
 ### Rebuilding Paths: *buildPaths*
 
 The *buildPaths* function is responsible for reconstructing the shortest paths from the destination city back to the starting city. It recursively builds the paths by backtracking from the destination to the start, using the previous city table to determine the next city in the path.
@@ -116,8 +112,6 @@ dijkstra adjList ((dist, city):queue) distMap prevMap = dijkstra adjList newQueu
         (newQueue', newDistMap', newPrevMap') = updateNeighbors neighbors queue distMap prevMap
 ```
 
-<br>
-
 - **Purpose**: Executes Dijkstra's algorithm to find the shortest paths from the starting city to all other cities in the graph.
 
 - **Base Case**: If the priority queue is empty, the function returns the previous city table.
@@ -148,8 +142,6 @@ updateNeighbors ((neighbor, weight):ns) queue distMap prevMap
 
 - **Base Case**: If there are no more neighbors to process, the function returns the updated priority queue, distance map, and previous map.
 
-<br><br><br><br>
-
 - **Recursive Case**: The function updates the distances to each neighbor, maintains the shortest known distances, and recursively processes the remaining neighbors:
 
     - If the new distance is shorter, the priority queue, distance map, and previous map are updated with the new values.
@@ -175,8 +167,6 @@ shortestPath roadmap start end = map reverse $ buildPaths start end foundPaths
 - **Purpose**: Organize and call the necessary functions to find the shortest path between two cities in the roadmap.
 
 - **Functionality**: Initializes the priority queue, distance map, and previous city table, then calls *dijkstra* to find the shortest paths. Finally, it reconstructs the shortest path from the start city to the end city.
-
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 
 ## Traveling Salesman Problem (TSP) Function: *travelSales*
 
@@ -293,8 +283,6 @@ recoverPath matrix memo start n = arrayToPath (initialPathArray Data.Array.// re
 - **Purpose**: Organize the path reconstruction process.
 
 - **Functionality**: Initializes all necessary data structures used in the path recovery process and calls the *recoverPathAux* function to recover the path from the destination city to the starting city. Finally, calls the *arrayToPath* function to convert the array to a valid `Path` structure.
-
-<br><br><br><br><br>
 
 #### Recovery Main Loop: *recoverPathAux*
 
@@ -413,8 +401,6 @@ updateNext memo subset next = memo Data.Array.// [((next, subset), Just minDist)
 - **Purpose**: Update the memoization table for the next city in the subset.
 
 - **Functionality**: Call the *calcMinDist* function to calculate the minimum distance for the next city and update the memoization table with the new distance. It also updates the state of the subset by toggling the bit corresponding to the next city.
-
-<br><br><br><br><br><br><br><br><br><br>
 
 #### Minimum Distance Calculator: *calcMinDist*
 
