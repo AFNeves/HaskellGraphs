@@ -60,9 +60,9 @@ searchPrevMap city prevMap = case lookup city prevMap of
     Nothing -> []
 ```
 
-- **Purpose**: Finds the previous cities associated with a given City in prevMap.
+- **Purpose**: Find the previous cities associated with a given City in prevMap.
 
-- **Default Behavior**: Returns an empty list if city is not found, allowing the algorithm to proceed without errors due to missing data.
+- **Default Behavior**: Returns an empty list if the city is not found, allowing the algorithm to proceed without errors due to missing data.
 
 ```haskell
 searchDistMap :: City -> DistMap -> Distance
@@ -75,7 +75,7 @@ searchDistMap city distMap = case lookup city distMap of
 
 - **Default Behavior**: Returns a large number (treated as "infinity") if the city is absent, indicating that the city is unreachable in the current path context.
 
-### Rebuiding Paths: `buildPaths`
+### Rebuilding Paths: `buildPaths`
 
 The `buildPaths` function is responsible for reconstructing the shortest paths from the destination city back to the starting city. It recursively builds the paths by backtracking from the destination to the start, using the previous city table to determine the next city in the path.
 
@@ -120,7 +120,7 @@ dijkstra adjList ((dist, city):queue) distMap prevMap = dijkstra adjList newQueu
 
 #### Updating Neighbors: `updateNeighbors`
 
-The `updateNeighbors` function receives the neighbors of the current city, the priority queue, distance map, and previous city table. It iterates through the neighbors list and compares the new distance to the neighbor with the previous known distance. If the new distance is shorter, all three tables are updated with corresponding values. If the new distance is equal to the previous distance, the previous city is appended to the list of previous cities for the neighbor. If the new distance is longer, no updates are made, and the loop continues. When the neighbors list is empty, the function returns the updated priority queue, distance map, and previous city table.
+The `updateNeighbors` function receives the neighbors of the current city, the priority queue, the distance map, and the previous city table. It iterates through the neighbor's list and compares the new distance to the neighbor with the previous known distance. If the new distance is shorter, all three tables are updated with corresponding values. If the new distance is equal to the previous distance, the previous city is appended to the list of previous cities for the neighbor. If the new distance is longer, no updates are made, and the loop continues. When the neighbor's list is empty, the function returns the updated priority queue, distance map, and previous city table.
 
 ```haskell
 updateNeighbors :: [(City, Distance)] -> PQueue -> DistMap -> PrevMap -> (PQueue, DistMap, PrevMap)
