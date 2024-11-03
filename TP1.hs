@@ -149,6 +149,22 @@ isStronglyConnected roadmap = length (cities roadmap) == length (dfs roadmap "0"
 -- Function 8 | Returns the shortest path between two cities in the graph.
 ----------------------------------------------------------------------------
 
+------------------------
+-- AUXILIARY DATA TYPE
+------------------------
+
+-- Priority Queue
+
+type PQueue = [(Distance, City)]
+
+-- Distances Table
+
+type DistMap = [(City, Distance)]
+
+-- Previous City Table
+
+type PrevMap = [(City, [City])]
+
 ----------------------------------------------------------------
 -- EXCEPTION HANDLERS | Handle search in maps preventing errors.
 ----------------------------------------------------------------
@@ -156,7 +172,7 @@ isStronglyConnected roadmap = length (cities roadmap) == length (dfs roadmap "0"
 -- Receives a city and a prevMap as arguments.
 -- Searches the prevMap for the city and returns the list of previous cities if the city is found, and an empty list if it is not.
 
-searchPrevMap :: City -> [(City, [City])] -> [City]
+searchPrevMap :: City -> PrevMap -> [City]
 searchPrevMap city prevMap = case lookup city prevMap of
     Just prevCities -> prevCities
     Nothing -> []
@@ -164,7 +180,7 @@ searchPrevMap city prevMap = case lookup city prevMap of
 -- Receives a city and a distMap as arguments.
 -- Searches the distMap for the city and returns the distance if the city is found, and infinity if it is not.
 
-searchDistMap :: City -> [(City, Distance)] -> Distance
+searchDistMap :: City -> DistMap -> Distance
 searchDistMap city distMap = case lookup city distMap of
     Just currentDist -> currentDist
     Nothing -> 1000000000000000
@@ -176,7 +192,7 @@ searchDistMap city distMap = case lookup city distMap of
 -- Receives the start city, the end city, and a previous city table as arguments.
 -- Recursively builds the paths between the start and end cities using the previous city table.
 
-buildPaths :: City -> City -> [(City, [City])] -> [[City]]
+buildPaths :: City -> City -> PrevMap -> [Path]
 buildPaths start city prevMap
     | city == start = [[start]]
     | otherwise = [city:path | prev <- searchPrevMap city prevMap, path <- buildPaths start prev prevMap]
@@ -185,7 +201,7 @@ buildPaths start city prevMap
 -- Implements Dijkstra's algorithm to find the shortest path between two cities in the graph.
 -- Returns the previous city table with the shortest paths between the start and end cities.
 
-dijkstra :: AdjList -> [(Distance, City)] -> [(City, Distance)] -> [(City, [City])] -> ([(City, [City])])
+dijkstra :: AdjList -> PQueue -> DistMap -> PrevMap -> PrevMap
 dijkstra _ [] _ prevMap = prevMap
 dijkstra adjList ((dist, city):queue) distMap prevMap = dijkstra adjList newQueue' newDistMap' newPrevMap'
     where
@@ -195,6 +211,13 @@ dijkstra adjList ((dist, city):queue) distMap prevMap = dijkstra adjList newQueu
         currentDist = searchDistMap city distMap
         (newQueue', newDistMap', newPrevMap') = updateNeighbors neighbors queue distMap prevMap
 
+        -- Receives a list of neighbors, a priority queue, a distance table, and a previous city table as arguments.
+        -- Loops over the neighbors and updates the priority queue, the distance table, and the previous city table with the shortest paths found.
+        -- If the distance is less than the previous distance, updates the tables with the new distance and the new path.
+        -- If the distance is equal to the previous distance, updates the tables with the new path.
+        -- If the distance is greater than the previous distance, continues the loop.
+
+        updateNeighbors :: [(City, Distance)] -> PQueue -> DistMap -> PrevMap -> (PQueue, DistMap, PrevMap)
         updateNeighbors [] queue distMap prevMap = (queue, distMap, prevMap)
         updateNeighbors ((neighbor, weight):ns) queue distMap prevMap
             | newDist < prevNeighborDist = updateNeighbors ns newQueue newDistMap newPrevMap
