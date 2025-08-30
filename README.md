@@ -442,6 +442,10 @@ travelSales roadmap
 
 - **Functionality**: Initializes the adjacency matrix, memoization table, and starting city, then calls the *solveTSP* function to find the shortest path that visits all cities exactly once and returns to the starting city. Finally, it recovers the path from the memoization table. Notably, the function checks if the roadmap is strongly connected before proceeding with the TSP algorithm.
 
-***
+## License
 
-This project was developed by [Afonso Neves](up202108884@up.pt)
+This project is distributed under the [MIT License](LICENSE).
+
+---
+
+Developed by [Afonso Neves](mailto:up202108884@up.pt)
