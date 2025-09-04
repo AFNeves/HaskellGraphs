@@ -448,4 +448,4 @@ This project is distributed under the [MIT License](LICENSE).
 
 ---
 
-Developed by [Afonso Neves](mailto:up202108884@up.pt)
+Developed by [Afonso Neves](mailto:afonsomn.2003@gmail.com)
